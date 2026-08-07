@@ -1,20 +1,21 @@
 @import "tailwindcss";
 
 /*
-  Fixed dark "game HUD" theme — this site is always dark by design,
-  not a prefers-color-scheme toggle. Palette is moody red/black with a
-  cyan HUD accent, meant to sit well with a Kissland-inspired guide
-  character once Oxcy's sprites are dropped in.
+  Fixed dark "game world" theme — always dark by design, not a
+  prefers-color-scheme toggle. Palette: forest green (matches Oxcy's
+  stripes) + gold (HUD/game accents) + mint (background depth), with a
+  pink "yarn" accent reserved for the cursor/toy motif.
 */
 :root {
-  --background: #050505;
-  --background-elevated: #0d0d10;
+  --background: #060907;
+  --background-elevated: #0d130f;
   --foreground: #ededed;
-  --foreground-muted: #9a9a9a;
-  --accent: #e11d48;
-  --accent-2: #22d3ee;
-  --accent-3: #2dd4bf; /* teal — echoes Oxcy's colouring */
-  --border: #1f1f23;
+  --foreground-muted: #9aa39c;
+  --accent: #22c55e; /* Oxcy green — primary CTA/interactive colour */
+  --accent-2: #facc15; /* gold — HUD labels, skill highlights, "game" pops */
+  --accent-3: #34d399; /* mint — background depth, echoes the teal ref art */
+  --yarn: #f472b6; /* pink yarn ball — cursor + toy prop colour */
+  --border: #1c231e;
 }
 
 @theme inline {
@@ -25,6 +26,7 @@
   --color-accent: var(--accent);
   --color-accent-2: var(--accent-2);
   --color-accent-3: var(--accent-3);
+  --color-yarn: var(--yarn);
   --color-border: var(--border);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
@@ -87,7 +89,7 @@ body {
   width: 55vw;
   height: 55vw;
   background: var(--accent);
-  opacity: 0.28;
+  opacity: 0.22;
   animation: blob-drift-1 22s ease-in-out infinite;
 }
 .bg-blob-2 {
@@ -95,8 +97,8 @@ body {
   right: -10%;
   width: 60vw;
   height: 60vw;
-  background: var(--accent-2);
-  opacity: 0.18;
+  background: var(--accent-3);
+  opacity: 0.16;
   animation: blob-drift-2 26s ease-in-out infinite;
 }
 .bg-blob-3 {
@@ -104,8 +106,8 @@ body {
   left: 30%;
   width: 45vw;
   height: 45vw;
-  background: var(--accent-3);
-  opacity: 0.12;
+  background: var(--accent-2);
+  opacity: 0.08;
   animation: blob-drift-3 30s ease-in-out infinite;
 }
 
@@ -140,10 +142,32 @@ body {
   inset: 0;
   background: radial-gradient(
     500px circle at var(--cursor-x, 50%) var(--cursor-y, 20%),
-    color-mix(in srgb, var(--accent-2) 10%, transparent),
+    color-mix(in srgb, var(--accent) 10%, transparent),
     transparent 70%
   );
   transition: opacity 0.3s ease;
+}
+
+/* fixed "ground" strip anchored to the viewport bottom — a cheap platformer
+   horizon so the whole page reads as standing on level ground, ready for
+   Oxcy to walk along later */
+.bg-ground {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 14px;
+  z-index: -5;
+  background:
+    linear-gradient(to top, var(--background) 0%, transparent 100%),
+    repeating-linear-gradient(
+      -60deg,
+      color-mix(in srgb, var(--accent) 35%, transparent) 0 6px,
+      transparent 6px 14px
+    );
+  border-top: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+  opacity: 0.55;
+  pointer-events: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -153,7 +177,48 @@ body {
 }
 
 /* ---------------------------------------------------------------------- */
-/* Custom reactive cursor (src/components/Cursor.tsx)                     */
+/* Section "game floor" divider (src/components/Section.tsx)              */
+/* ---------------------------------------------------------------------- */
+
+.section-floor {
+  height: 3px;
+  background-image: repeating-linear-gradient(
+    to right,
+    var(--border) 0 10px,
+    transparent 10px 14px
+  );
+}
+
+/* ---------------------------------------------------------------------- */
+/* Floating background props (src/components/GameProp.tsx)                */
+/* Foundation for Oxcy to later walk to / interact with these.            */
+/* ---------------------------------------------------------------------- */
+
+@keyframes prop-float {
+  0%, 100% { transform: translateY(0) rotate(-3deg); }
+  50% { transform: translateY(-10px) rotate(3deg); }
+}
+
+.game-prop {
+  animation: prop-float 4.5s ease-in-out infinite;
+  transition: opacity 0.25s ease, transform 0.25s ease, filter 0.25s ease;
+  opacity: 0.5;
+  filter: drop-shadow(0 0 0 transparent);
+}
+
+.game-prop:hover {
+  opacity: 1;
+  filter: drop-shadow(0 0 14px color-mix(in srgb, var(--accent-2) 60%, transparent));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .game-prop {
+    animation: none;
+  }
+}
+
+/* ---------------------------------------------------------------------- */
+/* Reactive cursor — yarn ball (src/components/Cursor.tsx)                */
 /* Only enabled via JS on fine-pointer devices — see Cursor.tsx           */
 /* ---------------------------------------------------------------------- */
 
@@ -162,43 +227,39 @@ html.custom-cursor * {
   cursor: none !important;
 }
 
-.cursor-dot {
+.cursor-halo {
   position: fixed;
   top: 0;
   left: 0;
-  width: 6px;
-  height: 6px;
+  width: 44px;
+  height: 44px;
   border-radius: 999px;
-  background: var(--accent-2);
-  pointer-events: none;
-  z-index: 9999;
-  will-change: transform;
-}
-
-.cursor-ring {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 32px;
-  height: 32px;
-  border-radius: 999px;
-  border: 1.5px solid var(--accent-2);
+  border: 1.5px dashed var(--accent-2);
   pointer-events: none;
   z-index: 9998;
   will-change: transform;
-  transition: width 0.2s ease, height 0.2s ease, border-color 0.2s ease,
-    background-color 0.2s ease, opacity 0.2s ease;
+  opacity: 0;
+  transition: opacity 0.2s ease, width 0.2s ease, height 0.2s ease;
 }
 
-.cursor-ring.cursor-hover {
-  width: 56px;
-  height: 56px;
-  border-color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 15%, transparent);
+.cursor-halo.cursor-hover {
+  opacity: 1;
+  width: 60px;
+  height: 60px;
 }
 
-.cursor-ring.cursor-active {
+.cursor-ball {
+  position: fixed;
+  top: 0;
+  left: 0;
   width: 22px;
   height: 22px;
-  background: color-mix(in srgb, var(--accent-2) 25%, transparent);
+  pointer-events: none;
+  z-index: 9999;
+  will-change: transform;
+  transition: transform 0.08s ease-out;
+}
+
+.cursor-ball.cursor-active {
+  transform: scale(0.75, 1.25) !important;
 }

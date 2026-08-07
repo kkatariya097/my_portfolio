@@ -1,11 +1,23 @@
 import { ExternalLink } from "lucide-react";
-import { GithubIcon } from "@/components/icons";
+import { GithubIcon, BoxIcon } from "@/components/icons";
 import { projects } from "@/lib/data";
 import { Section } from "@/components/Section";
+import { GameProp } from "@/components/GameProp";
 
 export function Projects() {
   return (
-    <Section id="projects" eyebrow="What I've built" title="Projects">
+    <Section
+      id="projects"
+      eyebrow="What I've built"
+      title="Projects"
+      decorations={
+        <GameProp
+          id="prop-box"
+          icon={<BoxIcon size={30} />}
+          className="right-8 top-10 hidden sm:block"
+        />
+      }
+    >
       <div className="grid gap-6 sm:grid-cols-2">
         {projects.map((project) => (
           <div

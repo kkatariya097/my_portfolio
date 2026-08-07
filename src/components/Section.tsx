@@ -7,21 +7,31 @@ type SectionProps = {
   eyebrow?: string;
   children: ReactNode;
   className?: string;
+  /** Extra content positioned absolutely within the section — GameProp icons etc. */
+  decorations?: ReactNode;
 };
 
 /**
  * Consistent section shell used by every section on the page.
  * The `id` doubles as the scroll-target for the nav AND the
  * future "walk Oxcy to this section" target (Day 3).
+ *
+ * `relative` + `overflow-hidden` so absolutely-positioned GameProp icons
+ * (passed via `decorations`) stay contained within the section.
  */
-export function Section({ id, title, eyebrow, children, className }: SectionProps) {
+export function Section({ id, title, eyebrow, children, className, decorations }: SectionProps) {
   return (
     <section
       id={id}
       data-section={id}
-      className={cn("scroll-mt-24 py-20 sm:py-28 px-6 sm:px-10", className)}
+      className={cn(
+        "relative scroll-mt-24 overflow-hidden py-20 sm:py-28 px-6 sm:px-10",
+        className
+      )}
     >
-      <div className="mx-auto w-full max-w-5xl">
+      {decorations}
+
+      <div className="relative mx-auto w-full max-w-5xl">
         {eyebrow && (
           <p className="mb-2 font-mono text-xs uppercase tracking-[0.2em] text-accent-2">
             {eyebrow}
@@ -34,6 +44,8 @@ export function Section({ id, title, eyebrow, children, className }: SectionProp
         )}
         {children}
       </div>
+
+      <div className="section-floor absolute inset-x-0 bottom-0" aria-hidden="true" />
     </section>
   );
 }

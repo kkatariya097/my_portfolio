@@ -1,20 +1,23 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { cursorStore } from "@/lib/cursorStore";
 
 /**
- * Custom reactive cursor: a small dot that tracks the mouse exactly, and a
- * ring that eases toward it (lerp) and grows when hovering interactive
- * elements. Also writes --cursor-x/--cursor-y onto <html> each frame so
- * Background.tsx's .bg-glow layer can track the cursor too.
+ * Custom reactive cursor: a little pink yarn ball that eases toward the
+ * pointer (lerp), rolls (rotates) based on horizontal travel, and squashes
+ * on click. A dashed gold halo appears around it over links/buttons.
+ *
+ * Also writes the live position to cursorStore + --cursor-x/--cursor-y on
+ * <html> each frame, so Background.tsx's glow and (later) the OxcyGuide
+ * character can react to where the cursor is.
  *
  * Only activates on fine-pointer (mouse/trackpad) devices — touch devices
- * keep their native behaviour, and the default cursor is left alone until
- * this confirms a mouse is present (progressive enhancement).
+ * keep their native behaviour (progressive enhancement).
  */
 export function Cursor() {
-  const dotRef = useRef<HTMLDivElement>(null);
-  const ringRef = useRef<HTMLDivElement>(null);
+  const ballRef = useRef<HTMLDivElement>(null);
+  const haloRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const isFinePointer = window.matchMedia("(pointer: fine)").matches;
@@ -23,7 +26,8 @@ export function Cursor() {
     document.documentElement.classList.add("custom-cursor");
 
     const target = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
-    const ring = { ...target };
+    const ball = { x: target.x, y: target.y, rotation: 0 };
+    let lastX = target.x;
     let rafId: number;
 
     const handleMove = (e: MouseEvent) => {
@@ -33,17 +37,16 @@ export function Cursor() {
       const hovered = (e.target as HTMLElement)?.closest?.(
         "a, button, [data-cursor-hover]"
       );
-      ringRef.current?.classList.toggle("cursor-hover", !!hovered);
+      haloRef.current?.classList.toggle("cursor-hover", !!hovered);
     };
-    const handleDown = () => ringRef.current?.classList.add("cursor-active");
-    const handleUp = () => ringRef.current?.classList.remove("cursor-active");
+    const handleDown = () => ballRef.current?.classList.add("cursor-active");
+    const handleUp = () => ballRef.current?.classList.remove("cursor-active");
     const handleLeave = () => {
-      dotRef.current?.style.setProperty("opacity", "0");
-      ringRef.current?.style.setProperty("opacity", "0");
+      ballRef.current?.style.setProperty("opacity", "0");
+      haloRef.current?.style.setProperty("opacity", "0");
     };
     const handleEnter = () => {
-      dotRef.current?.style.setProperty("opacity", "1");
-      ringRef.current?.style.setProperty("opacity", "1");
+      ballRef.current?.style.setProperty("opacity", "1");
     };
 
     window.addEventListener("mousemove", handleMove);
@@ -53,20 +56,30 @@ export function Cursor() {
     document.addEventListener("mouseenter", handleEnter);
 
     const loop = () => {
-      // ring eases toward the real cursor position; dot tracks it exactly
-      ring.x += (target.x - ring.x) * 0.18;
-      ring.y += (target.y - ring.y) * 0.18;
+      // ball eases toward the real cursor position, like it's chasing it
+      ball.x += (target.x - ball.x) * 0.2;
+      ball.y += (target.y - ball.y) * 0.2;
 
-      dotRef.current?.style.setProperty(
+      // roll based on horizontal travel — a positive dx spins it clockwise
+      const dx = ball.x - lastX;
+      ball.rotation += dx * 3;
+      lastX = ball.x;
+
+      // a subtle bob to sell the "rolling ball" feel while moving
+      const speed = Math.abs(dx);
+      const bob = Math.min(speed * 0.4, 4);
+
+      ballRef.current?.style.setProperty(
         "transform",
-        `translate3d(${target.x}px, ${target.y}px, 0) translate(-50%, -50%)`
+        `translate3d(${ball.x}px, ${ball.y - bob}px, 0) translate(-50%, -50%) rotate(${ball.rotation}deg)`
       );
-      ringRef.current?.style.setProperty(
+      haloRef.current?.style.setProperty(
         "transform",
-        `translate3d(${ring.x}px, ${ring.y}px, 0) translate(-50%, -50%)`
+        `translate3d(${ball.x}px, ${ball.y}px, 0) translate(-50%, -50%)`
       );
 
-      // feed the background glow layer
+      cursorStore.set(target.x, target.y);
+
       const xPct = (target.x / window.innerWidth) * 100;
       const yPct = (target.y / window.innerHeight) * 100;
       document.documentElement.style.setProperty("--cursor-x", `${xPct}%`);
@@ -89,8 +102,26 @@ export function Cursor() {
 
   return (
     <>
-      <div ref={dotRef} className="cursor-dot" aria-hidden="true" />
-      <div ref={ringRef} className="cursor-ring" aria-hidden="true" />
+      <div ref={haloRef} className="cursor-halo" aria-hidden="true" />
+      <div ref={ballRef} className="cursor-ball" aria-hidden="true">
+        <YarnBallSvg />
+      </div>
     </>
+  );
+}
+
+function YarnBallSvg() {
+  return (
+    <svg viewBox="0 0 32 32" width="22" height="22">
+      <circle cx="16" cy="16" r="14" fill="var(--yarn)" />
+      <g stroke="#be185d" strokeWidth="1.4" fill="none" opacity="0.65">
+        <path d="M2 16c6-6 22-6 28 0" />
+        <path d="M2 16c6 6 22 6 28 0" />
+        <path d="M16 2c-6 6-6 22 0 28" />
+        <path d="M6 6c5 7 15 7 20 20" />
+        <path d="M26 6c-5 7-15 7-20 20" />
+      </g>
+      <circle cx="11" cy="11" r="2.5" fill="#ffffff" opacity="0.35" />
+    </svg>
   );
 }

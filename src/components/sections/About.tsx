@@ -1,9 +1,22 @@
 import { about, profile } from "@/lib/data";
 import { Section } from "@/components/Section";
+import { GameProp } from "@/components/GameProp";
+import { PawIcon } from "@/components/icons";
 
 export function About() {
   return (
-    <Section id="about" eyebrow="Get to know me" title="About Me">
+    <Section
+      id="about"
+      eyebrow="Get to know me"
+      title="About Me"
+      decorations={
+        <GameProp
+          id="prop-paw"
+          icon={<PawIcon size={30} />}
+          className="right-8 top-10 hidden sm:block"
+        />
+      }
+    >
       <div className="grid gap-10 sm:grid-cols-[220px_1fr] sm:items-start">
         {/* TODO(content): swap this initials placeholder for a real <Image> photo served from S3 (Day 2) */}
         <div className="mx-auto flex h-[220px] w-[220px] items-center justify-center rounded-2xl border border-border bg-background-elevated text-4xl font-bold text-foreground-muted sm:mx-0">

@@ -1,9 +1,22 @@
 import { skills } from "@/lib/data";
 import { Section } from "@/components/Section";
+import { GameProp } from "@/components/GameProp";
+import { YarnBallIcon } from "@/components/icons";
 
 export function Skills() {
   return (
-    <Section id="skills" eyebrow="Level up" title="Skills">
+    <Section
+      id="skills"
+      eyebrow="Level up"
+      title="Skills"
+      decorations={
+        <GameProp
+          id="prop-yarn"
+          icon={<YarnBallIcon size={30} />}
+          className="right-10 top-8 hidden sm:block"
+        />
+      }
+    >
       {/* TODO(day3): this grid becomes the backdrop for the orb-collecting
           mini-game — Oxcy runs around here and "unlocks" each category. */}
       <div className="grid gap-6 sm:grid-cols-2">

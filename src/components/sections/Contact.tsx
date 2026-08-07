@@ -1,11 +1,23 @@
 import { Mail, Download } from "lucide-react";
-import { GithubIcon, LinkedinIcon } from "@/components/icons";
+import { GithubIcon, LinkedinIcon, LaptopIcon } from "@/components/icons";
 import { profile } from "@/lib/data";
 import { Section } from "@/components/Section";
+import { GameProp } from "@/components/GameProp";
 
 export function Contact() {
   return (
-    <Section id="contact" eyebrow="Let's connect" title="Get In Touch">
+    <Section
+      id="contact"
+      eyebrow="Let's connect"
+      title="Get In Touch"
+      decorations={
+        <GameProp
+          id="prop-laptop"
+          icon={<LaptopIcon size={30} />}
+          className="right-8 top-10 hidden sm:block"
+        />
+      }
+    >
       <p className="max-w-lg text-foreground-muted">
         {/* TODO(content) */}
         Have a project in mind or just want to say hi? My inbox is always open.
