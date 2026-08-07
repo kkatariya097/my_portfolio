@@ -13,6 +13,7 @@
   --foreground-muted: #9a9a9a;
   --accent: #e11d48;
   --accent-2: #22d3ee;
+  --accent-3: #2dd4bf; /* teal — echoes Oxcy's colouring */
   --border: #1f1f23;
 }
 
@@ -23,6 +24,7 @@
   --color-foreground-muted: var(--foreground-muted);
   --color-accent: var(--accent);
   --color-accent-2: var(--accent-2);
+  --color-accent-3: var(--accent-3);
   --color-border: var(--border);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
@@ -52,4 +54,151 @@ body {
 ::-webkit-scrollbar-thumb {
   background: var(--border);
   border-radius: 999px;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Ambient background (src/components/Background.tsx)                    */
+/* ---------------------------------------------------------------------- */
+
+.bg-blob {
+  position: absolute;
+  border-radius: 999px;
+  filter: blur(110px);
+  mix-blend-mode: screen;
+  will-change: transform;
+}
+
+@keyframes blob-drift-1 {
+  0%, 100% { transform: translate(-10%, -10%) scale(1); }
+  50% { transform: translate(8%, 12%) scale(1.15); }
+}
+@keyframes blob-drift-2 {
+  0%, 100% { transform: translate(6%, 4%) scale(1); }
+  50% { transform: translate(-10%, -8%) scale(1.1); }
+}
+@keyframes blob-drift-3 {
+  0%, 100% { transform: translate(0%, 6%) scale(1); }
+  50% { transform: translate(6%, -10%) scale(1.2); }
+}
+
+.bg-blob-1 {
+  top: -10%;
+  left: -8%;
+  width: 55vw;
+  height: 55vw;
+  background: var(--accent);
+  opacity: 0.28;
+  animation: blob-drift-1 22s ease-in-out infinite;
+}
+.bg-blob-2 {
+  bottom: -15%;
+  right: -10%;
+  width: 60vw;
+  height: 60vw;
+  background: var(--accent-2);
+  opacity: 0.18;
+  animation: blob-drift-2 26s ease-in-out infinite;
+}
+.bg-blob-3 {
+  top: 35%;
+  left: 30%;
+  width: 45vw;
+  height: 45vw;
+  background: var(--accent-3);
+  opacity: 0.12;
+  animation: blob-drift-3 30s ease-in-out infinite;
+}
+
+.bg-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(to right, var(--border) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--border) 1px, transparent 1px);
+  background-size: 44px 44px;
+  opacity: 0.25;
+  mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, black 40%, transparent 100%);
+}
+
+.bg-noise {
+  position: absolute;
+  inset: 0;
+  opacity: 0.05;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+.bg-vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 80% 60% at 50% 30%, transparent 40%, var(--background) 100%);
+}
+
+/* cursor-follow glow — position driven by --cursor-x/--cursor-y, set in Cursor.tsx */
+.bg-glow {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    500px circle at var(--cursor-x, 50%) var(--cursor-y, 20%),
+    color-mix(in srgb, var(--accent-2) 10%, transparent),
+    transparent 70%
+  );
+  transition: opacity 0.3s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bg-blob-1, .bg-blob-2, .bg-blob-3 {
+    animation: none;
+  }
+}
+
+/* ---------------------------------------------------------------------- */
+/* Custom reactive cursor (src/components/Cursor.tsx)                     */
+/* Only enabled via JS on fine-pointer devices — see Cursor.tsx           */
+/* ---------------------------------------------------------------------- */
+
+html.custom-cursor,
+html.custom-cursor * {
+  cursor: none !important;
+}
+
+.cursor-dot {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--accent-2);
+  pointer-events: none;
+  z-index: 9999;
+  will-change: transform;
+}
+
+.cursor-ring {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  border: 1.5px solid var(--accent-2);
+  pointer-events: none;
+  z-index: 9998;
+  will-change: transform;
+  transition: width 0.2s ease, height 0.2s ease, border-color 0.2s ease,
+    background-color 0.2s ease, opacity 0.2s ease;
+}
+
+.cursor-ring.cursor-hover {
+  width: 56px;
+  height: 56px;
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 15%, transparent);
+}
+
+.cursor-ring.cursor-active {
+  width: 22px;
+  height: 22px;
+  background: color-mix(in srgb, var(--accent-2) 25%, transparent);
 }

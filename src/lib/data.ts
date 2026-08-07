@@ -6,13 +6,13 @@
 // ---------------------------------------------------------------------------
 
 export const profile = {
-  name: "Your Name", // TODO(content)
-  role: "Full-Stack Developer", // TODO(content)
+  name: "Kavya Katariya", 
+  role: "Full-Stack Developer", 
   tagline:
     "I build things for the web — and apparently, portfolios that guide you around like a video game.", // TODO(content)
-  email: "you@example.com", // TODO(content)
-  github: "https://github.com/your-handle", // TODO(content)
-  linkedin: "https://linkedin.com/in/your-handle", // TODO(content)
+  email: "kavyakatariya097@gmail.com", // TODO(content)
+  github: "https://github.com/kkatariya097", // TODO(content)
+  linkedin: "https://www.linkedin.com/in/katariyakavya097/", // TODO(content)
   resumeUrl: "/resume-placeholder.pdf", // TODO(content): will point at S3 asset URL once wired up (Day 2)
   photoUrl: "/photo-placeholder.png", // TODO(content): will point at S3 asset URL once wired up (Day 2)
 };
