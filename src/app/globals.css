@@ -263,3 +263,56 @@ html.custom-cursor * {
 .cursor-ball.cursor-active {
   transform: scale(0.75, 1.25) !important;
 }
+
+/* ---------------------------------------------------------------------- */
+/* Oxcy guide character (src/components/oxcy/OxcyGuide.tsx)               */
+/* ---------------------------------------------------------------------- */
+
+@keyframes oxcy-pop-in {
+  0% { transform: scale(0.4) translateY(20px); opacity: 0; }
+  70% { transform: scale(1.06) translateY(-4px); opacity: 1; }
+  100% { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+.oxcy-dock {
+  animation: oxcy-pop-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes oxcy-idle-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+.oxcy-float {
+  animation: oxcy-idle-bob 2.6s ease-in-out infinite;
+}
+
+@keyframes oxcy-bubble-in {
+  from { transform: translateY(6px) scale(0.95); opacity: 0; }
+  to { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+.oxcy-bubble {
+  animation: oxcy-bubble-in 0.25s ease-out both;
+}
+
+.oxcy-bubble::after {
+  content: "";
+  position: absolute;
+  bottom: -7px;
+  right: 22px;
+  width: 14px;
+  height: 14px;
+  background: var(--background-elevated);
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  transform: rotate(45deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .oxcy-float,
+  .oxcy-dock,
+  .oxcy-bubble {
+    animation: none;
+  }
+}
