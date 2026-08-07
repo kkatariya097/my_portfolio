@@ -1,26 +1,55 @@
 @import "tailwindcss";
 
+/*
+  Fixed dark "game HUD" theme — this site is always dark by design,
+  not a prefers-color-scheme toggle. Palette is moody red/black with a
+  cyan HUD accent, meant to sit well with a Kissland-inspired guide
+  character once Oxcy's sprites are dropped in.
+*/
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #050505;
+  --background-elevated: #0d0d10;
+  --foreground: #ededed;
+  --foreground-muted: #9a9a9a;
+  --accent: #e11d48;
+  --accent-2: #22d3ee;
+  --border: #1f1f23;
 }
 
 @theme inline {
   --color-background: var(--background);
+  --color-background-elevated: var(--background-elevated);
   --color-foreground: var(--foreground);
+  --color-foreground-muted: var(--foreground-muted);
+  --color-accent: var(--accent);
+  --color-accent-2: var(--accent-2);
+  --color-border: var(--border);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  color-scheme: dark;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+}
+
+::selection {
+  background: var(--accent);
+  color: var(--background);
+}
+
+/* thin scrollbar to keep the HUD feel */
+::-webkit-scrollbar {
+  width: 10px;
+}
+::-webkit-scrollbar-track {
+  background: var(--background);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 999px;
 }
