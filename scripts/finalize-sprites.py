@@ -2,21 +2,27 @@
 Builds the final Oxcy pose sprites directly from the master sheet in one
 pass (public/oxcy/oxcy sprit sheet.png, 6x4 grid, 256px cells).
 
-Two problems with a naive "crop exactly one 256px cell" approach, both
-because the source art isn't strictly confined to its grid cell:
+Background removal: flood-fills from the sheet's outer border through
+connected near-white pixels only. This is deliberately NOT a global
+"any near-white pixel -> fade it" threshold — that approach faded out
+Oxcy's own white belly/face fur too (it's legitimately near-white),
+producing the grainy/washed-out look. Flood-filling from the border means
+only pixels actually connected to the background get removed; white fur
+enclosed by the character's black outline is never touched.
+
+Two more problems with a naive "crop exactly one 256px cell" approach,
+both because the source art isn't strictly confined to its grid cell:
   1. BLEED IN: a neighbouring pose's limb pokes into this cell.
   2. CLIPPING: this pose's OWN limb/prop (tail, box edge, yarn ball) pokes
      OUT into the neighbouring cell and gets cut off.
-
 Fix: crop a PADDED region around each cell (reaching into neighbours),
 then use connected-component analysis to keep only the blob(s) whose
-bounding-box center is close to the pose's own home-cell center — which
-correctly keeps a tail/box that extends past the nominal boundary while
-still discarding a fully separate neighbouring character.
+bounding-box center is close to the pose's own home-cell center.
 """
 from PIL import Image
 from collections import deque
 import os
+import time
 
 SRC = r"C:\Users\kavya\my_journey_till_date\portfolio\public\oxcy\oxcy sprit sheet.png"
 OUT_DIR = r"C:\Users\kavya\my_journey_till_date\portfolio\public\oxcy\sprites\final"
@@ -29,6 +35,7 @@ DILATE_PX = 3
 CANVAS = 300
 BASELINE_Y = 275
 RADIUS_FRAC = 0.72  # * (CELL/2) — how far from home-cell-center a component may be and still count
+BG_THRESHOLD = 235  # min(r,g,b) at/above this counts as "white enough" to flood through
 
 SELECTION = {
     "wave": (0, 3),
@@ -42,25 +49,51 @@ SELECTION = {
 }
 
 
-def chroma_key_white(im):
-    """In place: soft-threshold white -> transparent on an RGBA image."""
-    px = im.load()
+def remove_background_flood_fill(im, threshold=BG_THRESHOLD):
+    """In place: makes transparent only the near-white pixels that are
+    reachable from the image border without crossing a non-near-white
+    pixel (i.e. the actual background, not enclosed white fur)."""
     w, h = im.size
-    LOW, HIGH = 235, 252
+    px = im.load()
+
+    def is_near_white(x, y):
+        r, g, b, _a = px[x, y]
+        return min(r, g, b) >= threshold
+
+    visited = bytearray(w * h)
+    dq = deque()
+
+    def seed(x, y):
+        idx = y * w + x
+        if not visited[idx] and is_near_white(x, y):
+            visited[idx] = 1
+            dq.append((x, y))
+
+    for x in range(w):
+        seed(x, 0)
+        seed(x, h - 1)
     for y in range(h):
+        seed(0, y)
+        seed(w - 1, y)
+
+    while dq:
+        x, y = dq.popleft()
+        for nx, ny in ((x - 1, y), (x + 1, y), (x, y - 1), (x, y + 1)):
+            if 0 <= nx < w and 0 <= ny < h:
+                nidx = ny * w + nx
+                if not visited[nidx] and is_near_white(nx, ny):
+                    visited[nidx] = 1
+                    dq.append((nx, ny))
+
+    for y in range(h):
+        row_off = y * w
         for x in range(w):
-            r, g, b, a = px[x, y]
-            m = min(r, g, b)
-            if m >= HIGH:
+            if visited[row_off + x]:
+                r, g, b, _a = px[x, y]
                 px[x, y] = (r, g, b, 0)
-            elif m >= LOW:
-                alpha = int(255 * (HIGH - m) / (HIGH - LOW))
-                px[x, y] = (r, g, b, alpha)
 
 
 def center_component_mask(mask, w, h, home_x, home_y, radius):
-    """Keeps the union of connected components whose bbox center is within
-    `radius` of (home_x, home_y) in LOCAL (crop) coordinates."""
     visited = bytearray(w * h)
     components = []
 
@@ -115,8 +148,10 @@ def dilate(mask, w, h, px_amount):
     return mask
 
 
+t0 = time.time()
 sheet = Image.open(SRC).convert("RGBA")
-chroma_key_white(sheet)
+remove_background_flood_fill(sheet)
+print(f"background removal took {time.time() - t0:.1f}s")
 W, H = sheet.size
 
 for name, (row, col) in SELECTION.items():
@@ -163,3 +198,5 @@ for name, (row, col) in SELECTION.items():
     touched_edge = bbox[0] == 0 or bbox[1] == 0 or bbox[2] == w or bbox[3] == h
     flag = "  <-- still touching crop edge, may need more PAD" if touched_edge else ""
     print(f"{name}: region {region.size} bbox {bbox} cropped {cropped.size}{flag}")
+
+print(f"total: {time.time() - t0:.1f}s")

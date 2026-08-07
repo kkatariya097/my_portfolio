@@ -1,18 +1,23 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { cn } from "@/lib/utils";
 
 type Props = {
   lines: string[];
   onDone: () => void;
   lineDurationMs?: number;
+  /** Which side of Oxcy the bubble grows toward — pass "right" when Oxcy
+   * is anchored on the left half of the screen (and vice versa) so the
+   * bubble always grows into open space instead of off-screen. */
+  side?: "left" | "right";
 };
 
 /**
  * RPG-style dialogue box: shows one line at a time, auto-advances (or
  * click to advance faster), closable any time. Rendered above Oxcy's head.
  */
-export function OxcySpeechBubble({ lines, onDone, lineDurationMs = 3200 }: Props) {
+export function OxcySpeechBubble({ lines, onDone, lineDurationMs = 3200, side = "left" }: Props) {
   const [index, setIndex] = useState(0);
   const isLast = index >= lines.length - 1;
 
@@ -29,7 +34,11 @@ export function OxcySpeechBubble({ lines, onDone, lineDurationMs = 3200 }: Props
       role="status"
       data-cursor-hover
       onClick={() => (isLast ? onDone() : setIndex((i) => i + 1))}
-      className="oxcy-bubble absolute bottom-full right-0 mb-3 w-56 cursor-pointer rounded-2xl rounded-br-sm border border-border bg-background-elevated px-4 py-3 text-sm text-foreground shadow-lg"
+      className={cn(
+        "oxcy-bubble absolute bottom-full mb-3 w-56 cursor-pointer rounded-2xl border border-border bg-background-elevated px-4 py-3 text-sm text-foreground shadow-lg",
+        side === "left" ? "right-0 rounded-br-sm" : "left-0 rounded-bl-sm"
+      )}
+      data-side={side}
     >
       <button
         type="button"

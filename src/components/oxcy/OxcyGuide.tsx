@@ -1,10 +1,12 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { motion } from "framer-motion";
 import { oxcyPoseSrc, sectionPose, type OxcyPoseName } from "@/lib/oxcyPoses";
 import { oxcyDialogues } from "@/lib/oxcyDialogue";
 import { cursorStore } from "@/lib/cursorStore";
 import { useActiveSection } from "@/hooks/useActiveSection";
+import { sectionAnchor, mobileAnchor, isRightSide } from "@/lib/oxcyAnchors";
 import { OxcySpeechBubble } from "./OxcySpeechBubble";
 
 const SECTION_IDS = ["home", "about", "skills", "projects", "contact"];
@@ -19,14 +21,15 @@ const WALK_STEP_MS = 160;
 const WALK_STEPS = 4;
 
 /**
- * The Oxcy guide: docked in the bottom-right corner, its pose follows
- * whichever section is in view (with a little walk-cycle in between), and
- * it reacts to the yarn-ball cursor getting close by pouncing on it.
+ * The Oxcy guide: roams between a handful of spots around the page (left
+ * mid, right mid, etc. — see oxcyAnchors.ts) as different sections come
+ * into view, walking between them, and reacts to the yarn-ball cursor
+ * getting close by pouncing on it.
  *
- * Deliberately NOT free-roaming across the page — a fixed companion whose
- * pose reacts to context is far more reliable to keep smooth than
- * literally animating a position down the whole page, and still delivers
- * on "Oxcy reacts to what you're doing."
+ * Position is viewport-relative (fixed + animated top/left), not literally
+ * tracking scroll offset down the document — much more reliable to keep
+ * smooth, while still delivering "Oxcy moves around the portfolio."
+ * Mobile keeps a single safe spot; roaming is desktop-only (limited space).
  */
 export function OxcyGuide() {
   const activeSection = useActiveSection(SECTION_IDS);
@@ -35,9 +38,23 @@ export function OxcyGuide() {
   const [pose, setPose] = useState<OxcyPoseName>("wave");
   const [isPlaying, setIsPlaying] = useState(false);
   const [showWelcome, setShowWelcome] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(
+    () => typeof window !== "undefined" && window.matchMedia("(min-width: 640px)").matches
+  );
 
   const dockRef = useRef<HTMLDivElement>(null);
   const prevSectionRef = useRef(activeSection);
+
+  // roaming is desktop-only — track the breakpoint live for resizes/rotation
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 640px)");
+    const handler = (e: MediaQueryListEvent) => setIsDesktop(e.matches);
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, []);
+
+  const anchor = isDesktop ? (sectionAnchor[activeSection] ?? sectionAnchor.home) : mobileAnchor;
+  const bubbleSide = isRightSide(anchor) ? "left" : "right";
 
   // preload every pose once so switching never shows a blank flash
   useEffect(() => {
@@ -60,7 +77,9 @@ export function OxcyGuide() {
   };
 
   // walk from the old pose to the new section's pose whenever the active
-  // section changes (skipped while mid-"play", handled below)
+  // section changes (skipped while mid-"play", handled below) — runs
+  // alongside the position animation below, so it reads as Oxcy actually
+  // walking to its new spot rather than just teleporting + pose-swapping
   useEffect(() => {
     if (isPlaying) return;
 
@@ -85,7 +104,8 @@ export function OxcyGuide() {
     return () => clearInterval(timer);
   }, [activeSection, targetPose, isPlaying]);
 
-  // cursor-proximity "come play" reaction
+  // cursor-proximity "come play" reaction — re-checks Oxcy's live (possibly
+  // mid-transition) position every frame via getBoundingClientRect
   useEffect(() => {
     let rafId: number;
     let playing = false;
@@ -120,24 +140,32 @@ export function OxcyGuide() {
   }, []);
 
   return (
-    <div
+    <motion.div
       ref={dockRef}
       data-cursor-hover
-      className="oxcy-dock fixed bottom-4 right-4 z-40 sm:bottom-6 sm:right-6"
+      className="fixed z-40 -translate-x-1/2 -translate-y-1/2"
+      animate={{ top: anchor.top, left: anchor.left }}
+      transition={{ type: "spring", stiffness: 110, damping: 16 }}
     >
-      {showWelcome && (
-        <OxcySpeechBubble lines={oxcyDialogues.welcome} onDone={dismissWelcome} />
-      )}
-      <div className="oxcy-float h-20 w-20 sm:h-32 sm:w-32">
-        {/* plain <img>, not next/image — these are small local sprites we
-            swap on state changes, no need for the optimization pipeline */}
-        <img
-          src={oxcyPoseSrc[pose]}
-          alt="Oxcy, your guide"
-          className="h-full w-full select-none object-contain drop-shadow-[0_10px_12px_rgba(0,0,0,0.55)]"
-          draggable={false}
-        />
+      <div className="oxcy-dock relative">
+        {showWelcome && (
+          <OxcySpeechBubble
+            lines={oxcyDialogues.welcome}
+            onDone={dismissWelcome}
+            side={bubbleSide}
+          />
+        )}
+        <div className="oxcy-float h-20 w-20 sm:h-32 sm:w-32">
+          {/* plain <img>, not next/image — these are small local sprites we
+              swap on state changes, no need for the optimization pipeline */}
+          <img
+            src={oxcyPoseSrc[pose]}
+            alt="Oxcy, your guide"
+            className="h-full w-full select-none object-contain drop-shadow-[0_10px_12px_rgba(0,0,0,0.55)]"
+            draggable={false}
+          />
+        </div>
       </div>
-    </div>
+    </motion.div>
   );
 }

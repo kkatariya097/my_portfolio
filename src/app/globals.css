@@ -309,6 +309,11 @@ html.custom-cursor * {
   transform: rotate(45deg);
 }
 
+.oxcy-bubble[data-side="right"]::after {
+  right: auto;
+  left: 22px;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .oxcy-float,
   .oxcy-dock,
