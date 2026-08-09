@@ -1,6 +1,6 @@
 # public/assets
 
-<!-- touched to trigger the sync-assets workflow as an OIDC test run -->
+<!-- retest after confirming AWS_DEPLOY_ROLE_ARN / AWS_S3_BUCKET / AWS_REGION secrets -->
 
 Drop the real files here:
 
