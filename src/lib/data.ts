@@ -5,16 +5,21 @@
 // find every spot that needs a real value.
 // ---------------------------------------------------------------------------
 
+import { assetUrl } from "./assets";
+
 export const profile = {
-  name: "Kavya Katariya", 
-  role: "Full-Stack Developer", 
+  name: "Kavya Katariya",
+  role: "Full-Stack Developer",
   tagline:
     "I build things for the web — and apparently, portfolios that guide you around like a video game.", // TODO(content)
   email: "kavyakatariya097@gmail.com", // TODO(content)
   github: "https://github.com/kkatariya097", // TODO(content)
   linkedin: "https://www.linkedin.com/in/katariyakavya097/", // TODO(content)
-  resumeUrl: "/resume-placeholder.pdf", // TODO(content): will point at S3 asset URL once wired up (Day 2)
-  photoUrl: "/photo-placeholder.png", // TODO(content): will point at S3 asset URL once wired up (Day 2)
+  // Served from S3 in production (see src/lib/assets.ts); drop the real
+  // files in public/assets/resume.pdf + public/assets/photo.jpg for local
+  // dev — scripts/sync happens automatically via GitHub Actions on push.
+  resumeUrl: assetUrl("resume.pdf"), // TODO(content)
+  photoUrl: assetUrl("photo.jpg"), // TODO(content)
 };
 
 export const about = {

@@ -1,0 +1,37 @@
+name: Sync assets to S3
+
+# Keeps resume/profile-photo in sync with S3 whenever they change, without
+# needing a full app redeploy. Auth is via OIDC — GitHub hands this run a
+# short-lived signed token, AWS checks it against the IAM role's trust
+# policy (scoped to this exact repo + branch), and issues temporary
+# credentials. No AWS access keys are stored anywhere.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "public/assets/**"
+  workflow_dispatch: # allows a manual run from the Actions tab
+
+permissions:
+  id-token: write # required to request the OIDC token
+  contents: read
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials via OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Sync public/assets to S3
+        run: |
+          aws s3 sync ./public/assets "s3://${{ secrets.AWS_S3_BUCKET }}/assets" \
+            --delete \
+            --cache-control "public, max-age=3600"
