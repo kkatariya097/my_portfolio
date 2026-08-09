@@ -103,8 +103,13 @@ export function Cursor() {
   return (
     <>
       <div ref={haloRef} className="cursor-halo" aria-hidden="true" />
+      {/* outer element: position ONLY (translate3d/rotate set via JS each
+          frame). The click-squash effect lives on the inner element so the
+          two never fight over the same `transform` property. */}
       <div ref={ballRef} className="cursor-ball" aria-hidden="true">
-        <YarnBallSvg />
+        <div className="cursor-ball-inner">
+          <YarnBallSvg />
+        </div>
       </div>
     </>
   );

@@ -257,11 +257,18 @@ html.custom-cursor * {
   pointer-events: none;
   z-index: 9999;
   will-change: transform;
+  /* NOTE: transform here is set via JS every animation frame (position +
+     rotation). Do not add a CSS transition on transform for this element —
+     it would fight the per-frame JS updates. The click-squash effect lives
+     on .cursor-ball-inner below instead, so the two never collide. */
+}
+
+.cursor-ball-inner {
   transition: transform 0.08s ease-out;
 }
 
-.cursor-ball.cursor-active {
-  transform: scale(0.75, 1.25) !important;
+.cursor-ball.cursor-active .cursor-ball-inner {
+  transform: scale(0.75, 1.25);
 }
 
 /* ---------------------------------------------------------------------- */
