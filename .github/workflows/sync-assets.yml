@@ -34,4 +34,8 @@ jobs:
         run: |
           aws s3 sync ./public/assets "s3://${{ secrets.AWS_S3_BUCKET }}/assets" \
             --delete \
+            --exclude "README.md" \
             --cache-control "public, max-age=3600"
+
+      - name: Show what's live
+        run: aws s3 ls "s3://${{ secrets.AWS_S3_BUCKET }}/assets/"

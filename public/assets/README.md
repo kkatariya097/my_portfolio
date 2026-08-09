@@ -1,5 +1,7 @@
 # public/assets
 
+<!-- touched to trigger the sync-assets workflow as an OIDC test run -->
+
 Drop the real files here:
 
 - `resume.pdf`
