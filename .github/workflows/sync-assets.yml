@@ -38,4 +38,7 @@ jobs:
             --cache-control "public, max-age=3600"
 
       - name: Show what's live
-        run: aws s3 ls "s3://${{ secrets.AWS_S3_BUCKET }}/assets/"
+        # informational only — don't fail the whole run over this (e.g. an
+        # empty prefix before any real assets have been added yet)
+        continue-on-error: true
+        run: aws s3 ls "s3://${{ secrets.AWS_S3_BUCKET }}/assets/" || echo "(nothing uploaded yet)"
