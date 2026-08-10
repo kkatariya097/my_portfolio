@@ -1,6 +1,6 @@
 # public/assets
 
-<!-- retest after confirming AWS_DEPLOY_ROLE_ARN / AWS_S3_BUCKET / AWS_REGION secrets -->
+<!-- retest after fixing trust policy sub wildcard for renamed repo/user IDs -->
 
 Drop the real files here:
 
